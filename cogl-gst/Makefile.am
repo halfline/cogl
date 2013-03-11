@@ -25,7 +25,7 @@ lib_LTLIBRARIES = libcogl-gst.la
 
 libcogl_gst_la_SOURCES = $(source_c) $(source_h) $(source_h_priv)
 libcogl_gst_la_CFLAGS = $(COGL_DEP_CFLAGS) $(COGL_GST_DEP_CFLAGS) $(COGL_EXTRA_CFLAGS) $(MAINTAINER_CFLAGS)
-libcogl_gst_la_LIBADD = $(top_builddir)/cogl/libcogl2.la
+libcogl_gst_la_LIBADD = $(top_builddir)/cogl/libcogl.la
 libcogl_gst_la_LIBADD += $(COGL_DEP_LIBS) $(COGL_GST_DEP_LIBS) $(COGL_EXTRA_LDFLAGS)
 libcogl_gst_la_LDFLAGS = \
 	-export-dynamic \
@@ -43,7 +43,7 @@ AM_CPPFLAGS = \
 	-I$(top_srcdir)			\
 	-I$(top_builddir)
 
-cogl_gstheadersdir = $(includedir)/cogl2/cogl-gst
+cogl_gstheadersdir = $(includedir)/cogl/cogl-gst
 cogl_gstheaders_HEADERS = $(source_h)
 
 plugin_source_c = \
@@ -58,7 +58,7 @@ plugin_LTLIBRARIES = libgstcogl.la
 
 libgstcogl_la_CFLAGS = $(COGL_DEP_CFLAGS) $(COGL_GST_DEP_CFLAGS) $(COGL_EXTRA_CFLAGS) $(MAINTAINER_CFLAGS)
 libgstcogl_la_LIBADD = \
-	$(top_builddir)/cogl/libcogl2.la \
+	$(top_builddir)/cogl/libcogl.la \
 	$(builddir)/libcogl-gst.la
 libgstcogl_la_LIBADD += $(COGL_DEP_LIBS) $(COGL_GST_DEP_LIBS) $(COGL_EXTRA_LDFLAGS)
 libgstcogl_la_LDFLAGS =	\
