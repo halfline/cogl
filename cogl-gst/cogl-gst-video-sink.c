@@ -70,7 +70,8 @@ G_DEFINE_TYPE (CoglGstVideoSink, cogl_gst_video_sink, GST_TYPE_BASE_SINK);
 enum
 {
   PROP_0,
-  PROP_UPDATE_PRIORITY
+  PROP_UPDATE_PRIORITY,
+  PROP_PAR
 };
 
 enum
@@ -731,12 +732,21 @@ cogl_gst_video_sink_parse_caps (GstCaps *caps,
 
   if (save)
     {
+      gboolean notify_par = FALSE;
+
+      if (priv->info.par_n != vinfo.par_n ||
+          priv->info.par_d != vinfo.par_d)
+        notify_par = TRUE;
+
       priv->info = vinfo;
 
       priv->format = format;
       priv->bgr = bgr;
 
       priv->renderer = renderer;
+
+      if (notify_par)
+        g_object_notify (G_OBJECT (sink), "pixel-aspect-ratio");
     }
 
   return TRUE;
@@ -1009,6 +1019,9 @@ cogl_gst_video_sink_get_property (GObject *object,
     case PROP_UPDATE_PRIORITY:
       g_value_set_int (value, g_source_get_priority ((GSource *) priv->source));
       break;
+    case PROP_PAR:
+      gst_value_set_fraction (value, priv->info.par_n, priv->info.par_d);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1075,6 +1088,14 @@ cogl_gst_video_sink_class_init (CoglGstVideoSinkClass *klass)
                             COGL_GST_PARAM_READWRITE);
 
   g_object_class_install_property (go_class, PROP_UPDATE_PRIORITY, pspec);
+
+  pspec = gst_param_spec_fraction ("pixel-aspect-ratio",
+                                   "Pixel Aspect Ratio",
+                                   "Pixel aspect ratio of incoming frames",
+                                   1, 100, 100, 1, 1, 1,
+                                   COGL_GST_PARAM_READABLE);
+
+  g_object_class_install_property (go_class, PROP_PAR, pspec);
 
   video_sink_signals[PIPELINE_READY_SIGNAL] =
     g_signal_new ("pipeline-ready",
