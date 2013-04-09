@@ -137,6 +137,7 @@ struct _CoglGstVideoSinkPrivate
   GstCaps *caps;
   CoglGstRenderer *renderer;
   GstFlowReturn flow_return;
+  int custom_start;
   int free_layer;
   GstVideoInfo info;
 };
@@ -157,7 +158,7 @@ cogl_gst_source_finalize (GSource *source)
 int
 cogl_gst_video_sink_get_free_layer (CoglGstVideoSink *sink)
 {
-  return sink->priv->free_layer;
+  return sink->priv->free_layer + sink->priv->custom_start;
 }
 
 int
@@ -167,11 +168,12 @@ cogl_gst_video_sink_attach_frame (CoglGstVideoSink *sink,
   CoglGstVideoSinkPrivate *priv = sink->priv;
   int i;
 
-  for (i = 0; i < G_N_ELEMENTS (priv->frame); i++)
-    if (priv->frame[i] != NULL)
-      cogl_pipeline_set_layer_texture (pln, i, priv->frame[i]);
+  for (i = priv->custom_start; i < G_N_ELEMENTS (priv->frame) + priv->custom_start; i++)
+    if (priv->frame[i - priv->custom_start] != NULL)
+      cogl_pipeline_set_layer_texture (pln, i,
+                                       priv->frame[i - priv->custom_start]);
 
-  return priv->free_layer;
+  return priv->free_layer + priv->custom_start;
 }
 
 static CoglBool
@@ -561,6 +563,101 @@ static CoglGstRenderer ayuv_glsl_renderer =
   cogl_gst_dummy_deinit,
   cogl_gst_ayuv_upload,
 };
+
+void
+cogl_gst_video_sink_attach_custom_conversion (CoglGstVideoSink *sink,
+                                              CoglPipeline *pipeline,
+                                              int start,
+                                              int previous_layer,
+                                              CoglBool modulate,
+                                              char *convertion_name)
+{
+  CoglSnippet *snippet = NULL;
+  char *src = NULL;
+
+  sink->priv->custom_start = start;
+
+  if (!convertion_name)
+    return;
+
+  if (sink->priv->renderer == &rgb24_renderer ||
+      sink->priv->renderer == &rgb32_renderer)
+    {
+      src = g_strconcat (
+        g_strdup_printf ("vec4 %s (vec2 UV) {\n", convertion_name),
+        g_strdup_printf ("  return texture2D (video_sampler%i, UV);\n", start),
+        "}",
+        NULL);
+    }
+  else if (sink->priv->renderer == &yv12_glsl_renderer ||
+           sink->priv->renderer == &i420_glsl_renderer)
+    {
+      src = g_strconcat (
+        g_strdup_printf ("vec4 %s (vec2 UV) {\n", convertion_name),
+        g_strdup_printf ("  float y = 1.1640625 * (texture2D (cogl_sampler%i, UV).g - 0.0625);\n", start),
+        g_strdup_printf ("  float u = texture2D (cogl_sampler%i, UV).g - 0.5;\n", start + 1),
+        g_strdup_printf ("  float v = texture2D (cogl_sampler%i, UV).g - 0.5;\n", start + 2),
+        "  vec4 color;\n",
+        "  color.r = y + 1.59765625 * v;\n",
+        "  color.g = y - 0.390625 * u - 0.8125 * v;\n",
+        "  color.b = y + 2.015625 * u;\n",
+        "  color.a = 1.0;\n",
+        "  return color;\n",
+        "}",
+        NULL);
+    }
+  else if (sink->priv->renderer == &ayuv_glsl_renderer)
+    {
+      src = g_strconcat (
+          g_strdup_printf ("vec4 %s (vec2 UV) {\n", convertion_name),
+          g_strdup_printf ("  vec4 color = texture2D (cogl_sampler%i, UV);\n", start),
+          "  float y = 1.1640625 * (color.g - 0.0625);\n",
+          "  float u = color.b - 0.5;\n",
+          "  float v = color.a - 0.5;\n",
+          "  color.a = color.r;\n",
+          "  color.r = y + 1.59765625 * v;\n",
+          "  color.g = y - 0.390625 * u - 0.8125 * v;\n",
+          "  color.b = y + 2.015625 * u;\n",
+          "  return color;\n",
+          "}",
+        NULL);
+    }
+
+  snippet = cogl_snippet_new (COGL_SNIPPET_HOOK_VERTEX_GLOBALS, src, NULL);
+  cogl_pipeline_add_snippet (pipeline, snippet);
+  cogl_object_unref (snippet);
+  snippet = cogl_snippet_new (COGL_SNIPPET_HOOK_FRAGMENT_GLOBALS, src, NULL);
+  cogl_pipeline_add_snippet (pipeline, snippet);
+  cogl_object_unref (snippet);
+  g_free (src);
+
+
+  snippet = NULL;
+
+  if (start > 0 && start != last_layer && modulate)
+    {
+      src =
+        g_strdup_printf ("cogl_layer = cogl_layer%i.rgba * %s (cogl_tex_coord%i_in.st);",
+                         last_layer, convertion_name, start);
+      snippet = cogl_snippet_new (COGL_SNIPPET_HOOK_LAYER_FRAGMENT, NULL, src);
+    }
+  else if (modulate)
+    {
+      src = g_strdup_printf ("cogl_layer =  %s (cogl_tex_coord%i_in.st);",
+                             convertion_name);
+      snippet = cogl_snippet_new (COGL_SNIPPET_HOOK_LAYER_FRAGMENT, NULL, NULL);
+      cogl_snippet_set_replace (snippet, src);
+    }
+
+  if (snippet)
+    {
+      cogl_pipeline_add_layer_snippet (pipeline,
+                                       (start + sink->priv->free_layer) - 1,
+                                       snippet);
+      cogl_object_unref (snippet);
+      g_free (src);
+   }
+}
 
 static GSList*
 cogl_gst_build_renderers_list (CoglContext *ctx)
@@ -1125,6 +1222,7 @@ cogl_gst_video_sink_new (CoglContext *ctx)
 {
   CoglGstVideoSink *sink = g_object_new (COGL_GST_TYPE_VIDEO_SINK, NULL);
   cogl_gst_video_sink_set_context (sink, ctx);
+  sink->priv->custom_start = 0;
 
   return sink;
 }

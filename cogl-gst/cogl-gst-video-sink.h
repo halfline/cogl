@@ -117,6 +117,39 @@ int
 cogl_gst_video_sink_attach_frame (CoglGstVideoSink *sink,
                                   CoglPipeline *pln);
 
+/**
+ * cogl_gst_video_sink_attach_custom_conversion:
+ * @sink: A #CoglGstVideoSink
+ * @pipeline: The #CoglPipeline the color conversion snippet
+ * needs to be attached to
+ * @start: At which layer to attach the frame texture (N.B. keep in mind that
+ * CoglGst might use up to 3 layer slots per video depending on its format, so
+ * make sure to leave some padding if you plan to add more layers after the
+ * video.
+ * @previous_layer: The number of the layer the video should be modulated with
+ * @modulate: Should the color conversion happen by default? If so, an extra
+ * snippet is attached and the video is modulated with the previous layer. If
+ * @conversion_name: How the color conversion function for this video should
+ * be called.
+ *
+ * This functions is used when attaching frames at a start point other than
+ * layer 0 is required. This could potentially be used to "layer" videos and
+ * textures on top of each other in the CoglPipeline. This layering could come
+ * handy if videos are used as alpha masks or normal maps, or when arranging
+ * layers in a perticular order, so Cogl could blend them nicely without extra
+ * hassle.
+ *
+ * Since: 0.0
+ * Stability: unstable
+ */
+
+void
+cogl_gst_video_sink_attach_custom_conversion (CoglGstVideoSink *sink,
+                                              CoglPipeline *pipeline,
+                                              int start,
+                                              int previous_layer,
+                                              CoglBool modulate,
+                                              char *convertion_name);
 G_END_DECLS
 
 #endif
