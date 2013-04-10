@@ -634,14 +634,14 @@ cogl_gst_video_sink_attach_custom_conversion (CoglGstVideoSink *sink,
 
   snippet = NULL;
 
-  if (start > 0 && start != last_layer && modulate)
+  if (start > 0 && start != previous_layer && modulate)
     {
       src =
         g_strdup_printf ("cogl_layer = cogl_layer%i.rgba * %s (cogl_tex_coord%i_in.st);",
-                         last_layer, convertion_name, start);
+                         previous_layer, convertion_name, start);
       snippet = cogl_snippet_new (COGL_SNIPPET_HOOK_LAYER_FRAGMENT, NULL, src);
     }
-  else if (modulate)
+  else if (modulate && start == 0)
     {
       src = g_strdup_printf ("cogl_layer =  %s (cogl_tex_coord%i_in.st);",
                              convertion_name);
