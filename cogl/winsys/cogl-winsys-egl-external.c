@@ -165,6 +165,114 @@ _cogl_winsys_egl_cleanup_context (CoglDisplay *display)
     }
 }
 
+static void
+_cogl_winsys_onscreen_swap_buffers_with_damage (CoglOnscreen *onscreen,
+                                                const int *rectangles,
+                                                int n_rectangles)
+{
+  CoglContext *context = COGL_FRAMEBUFFER (onscreen)->context;
+  CoglDisplayEGL *egl_display = context->display->winsys;
+  CoglDisplayKMS *kms_display = egl_display->platform;
+  CoglRenderer *renderer = context->display->renderer;
+  CoglRendererEGL *egl_renderer = renderer->winsys;
+  CoglRendererKMS *kms_renderer = egl_renderer->platform;
+  CoglOnscreenEGL *egl_onscreen = onscreen->winsys;
+  CoglOnscreenKMS *kms_onscreen = egl_onscreen->platform;
+  uint32_t handle, stride;
+  CoglFlipKMS *flip;
+
+  /* If we already have a pending swap then block until it completes */
+  while (kms_onscreen->next_fb_id != 0)
+    handle_drm_event (kms_renderer);
+
+  if (kms_onscreen->pending_egl_surface)
+    {
+      eglDestroySurface (egl_renderer->edpy, egl_onscreen->egl_surface);
+      egl_onscreen->egl_surface = kms_onscreen->pending_egl_surface;
+      kms_onscreen->pending_egl_surface = NULL;
+
+      _cogl_framebuffer_winsys_update_size (COGL_FRAMEBUFFER (kms_display->onscreen),
+                                            kms_display->width, kms_display->height);
+      context->current_draw_buffer_changes |= COGL_FRAMEBUFFER_STATE_BIND;
+    }
+  parent_vtable->onscreen_swap_buffers_with_damage (onscreen,
+                                                    rectangles,
+                                                    n_rectangles);
+
+  if (kms_onscreen->pending_surface)
+    {
+      free_current_bo (onscreen);
+      gbm_surface_destroy (kms_onscreen->surface);
+      kms_onscreen->surface = kms_onscreen->pending_surface;
+      kms_onscreen->pending_surface = NULL;
+    }
+  /* Now we need to set the CRTC to whatever is the front buffer */
+  kms_onscreen->next_bo = gbm_surface_lock_front_buffer (kms_onscreen->surface);
+
+#if (COGL_VERSION_ENCODE (COGL_GBM_MAJOR, COGL_GBM_MINOR, COGL_GBM_MICRO) >= \
+     COGL_VERSION_ENCODE (8, 1, 0))
+  stride = gbm_bo_get_stride (kms_onscreen->next_bo);
+#else
+  stride = gbm_bo_get_pitch (kms_onscreen->next_bo);
+#endif
+  handle = gbm_bo_get_handle (kms_onscreen->next_bo).u32;
+
+  if (drmModeAddFB (kms_renderer->fd,
+                    kms_display->width,
+                    kms_display->height,
+                    24, /* depth */
+                    32, /* bpp */
+                    stride,
+                    handle,
+                    &kms_onscreen->next_fb_id))
+    {
+      g_warning ("Failed to create new back buffer handle: %m");
+      gbm_surface_release_buffer (kms_onscreen->surface,
+                                  kms_onscreen->next_bo);
+      kms_onscreen->next_bo = NULL;
+      kms_onscreen->next_fb_id = 0;
+      return;
+    }
+
+  /* If this is the first framebuffer to be presented then we now setup the
+   * crtc modes, else we flip from the previous buffer */
+  if (kms_display->pending_set_crtc)
+    {
+      setup_crtc_modes (context->display, kms_onscreen->next_fb_id);
+      kms_display->pending_set_crtc = FALSE;
+    }
+
+  flip = g_slice_new0 (CoglFlipKMS);
+  flip->onscreen = onscreen;
+
+  flip_all_crtcs (context->display, flip, kms_onscreen->next_fb_id);
+
+  if (flip->pending == 0)
+    {
+      drmModeRmFB (kms_renderer->fd, kms_onscreen->next_fb_id);
+      gbm_surface_release_buffer (kms_onscreen->surface,
+                                  kms_onscreen->next_bo);
+      kms_onscreen->next_bo = NULL;
+      kms_onscreen->next_fb_id = 0;
+      g_slice_free (CoglFlipKMS, flip);
+      flip = NULL;
+
+      queue_swap_notify_for_onscreen (onscreen);
+    }
+  else
+    {
+      /* Ensure the onscreen remains valid while it has any pending flips... */
+      cogl_object_ref (flip->onscreen);
+
+      /* Process flip right away if we can't wait for vblank */
+      if (kms_renderer->page_flips_not_supported)
+        {
+          setup_crtc_modes (context->display, kms_onscreen->next_fb_id);
+          process_flip (flip);
+        }
+    }
+}
+
 static CoglBool
 _cogl_winsys_egl_onscreen_init (CoglOnscreen *onscreen,
                                 EGLConfig egl_config,
@@ -237,8 +345,16 @@ _cogl_winsys_egl_external_get_vtable (void)
       vtable.renderer_connect = _cogl_winsys_renderer_connect;
       vtable.renderer_disconnect = _cogl_winsys_renderer_disconnect;
 
+      vtable.onscreen_swap_region = NULL;
+      vtable.onscreen_swap_buffers_with_damage =
+        _cogl_winsys_onscreen_swap_buffers_with_damage;
+
       vtable_inited = TRUE;
     }
 
   return &vtable;
 }
+
+void
+cogl_egl_external_renderer_set_swap_handlers (CoglRenderer *renderer,
+
