@@ -477,6 +477,11 @@ cogl_sources_c += \
 	winsys/cogl-winsys-egl-kms.c \
 	winsys/cogl-winsys-egl-kms-private.h
 endif
+if SUPPORT_EGL_PLATFORM_EXTERNAL
+cogl_sources_c += \
+	winsys/cogl-winsys-egl-external.c \
+	winsys/cogl-winsys-egl-external-private.h
+endif
 if SUPPORT_EGL_PLATFORM_XLIB
 cogl_sources_c += \
 	winsys/cogl-winsys-egl-x11.c \

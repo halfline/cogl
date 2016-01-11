@@ -1078,6 +1078,22 @@ AS_IF([test "x$enable_wayland_egl_platform" = "xyes"],
 AM_CONDITIONAL(SUPPORT_EGL_PLATFORM_WAYLAND,
                [test "x$enable_wayland_egl_platform" = "xyes"])
 
+AC_ARG_ENABLE(
+  [external-egl-platform],
+  [AC_HELP_STRING([--enable-external-egl-platform=@<:@no/yes@:>@], [Enable support for externally managed egl platforms @<:@default=no@:>@])],
+  [],
+  enable_external_egl_platform=no
+)
+AS_IF([test "x$enable_external_egl_platform" = "xyes"],
+      [
+        EGL_PLATFORM_COUNT=$((EGL_PLATFORM_COUNT+1))
+        NEED_EGL=yes
+        EGL_PLATFORMS="$EGL_PLATFORMS external"
+
+        COGL_DEFINES_SYMBOLS="$COGL_DEFINES_SYMBOLS COGL_HAS_EGL_PLATFORM_EXTERNAL_SUPPORT"
+      ])
+AM_CONDITIONAL(SUPPORT_EGL_PLATFORM_EXTERNAL,
+               [test "x$enable_external_egl_platform" = "xyes"])
 
 AC_ARG_ENABLE(
   [kms-egl-platform],

@@ -57,6 +57,9 @@
 #ifdef COGL_HAS_EGL_PLATFORM_WAYLAND_SUPPORT
 #include "cogl-winsys-egl-wayland-private.h"
 #endif
+#ifdef COGL_HAS_EGL_PLATFORM_EXTERNAL_SUPPORT
+#include "cogl-winsys-egl-external-private.h"
+#endif
 #ifdef COGL_HAS_EGL_PLATFORM_KMS_SUPPORT
 #include "cogl-winsys-egl-kms-private.h"
 #endif
@@ -206,6 +209,9 @@ static CoglWinsysVtableGetter _cogl_winsys_vtable_getters[] =
 #endif
 #ifdef COGL_HAS_EGL_PLATFORM_WAYLAND_SUPPORT
   _cogl_winsys_egl_wayland_get_vtable,
+#endif
+#ifdef COGL_HAS_EGL_PLATFORM_EXTERNAL_SUPPORT
+  _cogl_winsys_egl_external_get_vtable,
 #endif
 #ifdef COGL_HAS_EGL_PLATFORM_KMS_SUPPORT
   _cogl_winsys_egl_kms_get_vtable,
