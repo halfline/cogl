@@ -523,101 +523,6 @@ GL_LIBRARY_DIRECTLY_LINKED=no
 
 enabled_drivers=""
 
-HAVE_GLES1=0
-AC_ARG_ENABLE(
-  [gles1],
-  [AC_HELP_STRING([--enable-gles1=@<:@no/yes@:>@], [Enable support for OpenGL-ES 1.1 @<:@default=no@:>@])],
-  [],
-  enable_gles1=no
-)
-AS_IF([test "x$enable_gles1" = "xyes"],
-      [
-        enabled_drivers="$enabled_drivers gles1"
-
-        cogl_gl_headers="GLES/gl.h GLES/glext.h"
-
-        AC_DEFINE([HAVE_COGL_GLES], 1, [Have GLES 1.1 for rendering])
-        COGL_DEFINES_SYMBOLS="$COGL_DEFINES_SYMBOLS COGL_HAS_GLES CLUTTER_COGL_HAS_GLES"
-        COGL_DEFINES_SYMBOLS="$COGL_DEFINES_SYMBOLS COGL_HAS_GLES1"
-        HAVE_GLES1=1
-
-        PKG_CHECK_EXISTS([glesv1_cm],
-          [COGL_PKG_REQUIRES_GL="$COGL_PKG_REQUIRES_GL glesv1_cm"
-           COGL_GLES1_LIBNAME="libGLESv1_CM.so"
-          ],
-          [
-            # We have to check the two headers independently as GLES/glext.h
-            # needs to include GLES/gl.h to have the GL types defined (eg.
-            # GLenum).
-            AC_CHECK_HEADER([GLES/gl.h],
-                            [],
-                            [AC_MSG_ERROR([Unable to locate GLES/gl.h])])
-            AC_CHECK_HEADER([GLES/glext.h],
-                            [],
-                            [AC_MSG_ERROR([Unable to locate GLES/glext.h])],
-                            [#include <GLES/gl.h>])
-
-            # Early implementations provided only a GLES/egl.h while Khronos's
-            # implementer guide now states EGL/egl.h is the One. Some
-            # implementations keep a GLES/egl.h wrapper around EGL/egl.h for
-            # backward compatibility while others provide EGL/egl.h only.
-            AC_CHECK_HEADERS([GLES/egl.h EGL/egl.h])
-
-            AS_IF([test "x$ac_cv_header_GLES_egl_h" = "xyes"],
-                  [COGL_EGL_INCLUDES="#include <GLES/egl.h>"],
-                  [test "x$ac_cv_header_EGL_egl_h" = "xyes"],
-                  [
-                    COGL_EGL_INCLUDES="#include <EGL/egl.h>"
-                  ],
-                  [AC_MSG_ERROR([Unable to locate EGL header])])
-            AC_SUBST([COGL_EGL_INCLUDES])
-
-            AC_CHECK_HEADERS([EGL/eglext.h],
-                             [COGL_EGL_INCLUDES="$COGL_EGL_INCLUDE
-#include <EGL/eglext.h>"],
-                             [],
-                             [$COGL_EGL_INCLUDES])
-
-            # Check for a GLES 1.x Common Profile library with/without EGL.
-            #
-            # Note: historically GLES 1 libraries shipped with the
-            # EGL and GLES symbols all bundled in one library. Now
-            # the Khronos Implementers Guide defines two naming
-            # schemes: -lGLES_CM should be used for a library that
-            # bundles the GLES and EGL API together and -lGLESv1_CM
-            # would be used for a standalone GLES API.
-            AC_CHECK_LIB(GLES_CM, [eglInitialize],
-              [COGL_GLES1_LIBNAME="libGLES_CM.so"],
-              [
-                AC_CHECK_LIB(GLESv1_CM, [glFlush],
-                  [COGL_GLES1_LIBNAME="libGLESv1_CM.so"
-                   NEED_SEPARATE_EGL=yes
-                  ],
-                  [AC_MSG_ERROR([Unable to locate required GLES 1.x Common Profile library])])
-              ])
-
-            EGL_CHECKED=yes
-          ])
-      ])
-
-HAVE_GLES2=0
-AC_ARG_ENABLE(
-  [gles2],
-  [AC_HELP_STRING([--enable-gles2=@<:@no/yes@:>@], [Enable support for OpenGL-ES 2.0 @<:@default=no@:>@])],
-  [],
-  enable_gles2=no
-)
-AS_IF([test "x$enable_gles2" = "xyes"],
-      [
-        enabled_drivers="$enabled_drivers gles2"
-
-        cogl_gl_headers="GLES2/gl2.h GLES2/gl2ext.h"
-        AC_DEFINE([HAVE_COGL_GLES2], 1, [Have GLES 2.0 for rendering])
-        COGL_DEFINES_SYMBOLS="$COGL_DEFINES_SYMBOLS COGL_HAS_GLES CLUTTER_COGL_HAS_GLES"
-        COGL_DEFINES_SYMBOLS="$COGL_DEFINES_SYMBOLS COGL_HAS_GLES2"
-        HAVE_GLES2=1
-      ])
-
 HAVE_GL=0
 AC_ARG_ENABLE(
   [gl],
@@ -663,22 +568,12 @@ AS_IF([test "x$enable_gl" = "xyes"],
       ])
 
 AM_CONDITIONAL([COGL_DRIVER_GL_SUPPORTED], [test "x$enable_gl" = "xyes"])
-AM_CONDITIONAL([COGL_DRIVER_GLES_SUPPORTED],
-               [test "x$enable_gles1" = "xyes" || test "x$enable_gles2" = "xyes"])
 
 dnl Allow the GL library names and default driver to be overridden with configure options
 AC_ARG_WITH([gl-libname],
             [AS_HELP_STRING([--with-gl-libname],
                             override the name of the GL library to dlopen)],
             [COGL_GL_LIBNAME="$withval"])
-AC_ARG_WITH([gles1-libname],
-            [AS_HELP_STRING([--with-gles1-libname],
-                            override the name of the GLESv1 library to dlopen)],
-            [COGL_GLES1_LIBNAME="$withval"])
-AC_ARG_WITH([gles2-libname],
-            [AS_HELP_STRING([--with-gles2-libname],
-                            override the name of the GLESv2 library to dlopen)],
-            [COGL_GLES2_LIBNAME="$withval"])
 AC_ARG_WITH([default-driver],
             [AS_HELP_STRING([--with-default-driver],
                             specify a default cogl driver)],
@@ -691,37 +586,12 @@ AM_CONDITIONAL(HAVE_COGL_DEFAULT_DRIVER,
 
 AC_SUBST([COGL_GL_LIBNAME])
 AC_SUBST([HAVE_GL])
-AC_SUBST([COGL_GLES1_LIBNAME])
-AC_SUBST([HAVE_GLES1])
-AC_SUBST([COGL_GLES2_LIBNAME])
-AC_SUBST([HAVE_GLES2])
 AC_SUBST([COGL_DEFAULT_DRIVER])
 
 if test "x$GL_LIBRARY_DIRECTLY_LINKED" = "xyes"; then
    AC_DEFINE([HAVE_DIRECTLY_LINKED_GL_LIBRARY], [1],
              [Defined if the GL library should not be dlopened])
 fi
-
-AC_ARG_ENABLE(
-  [cogl-gles2],
-  [AC_HELP_STRING([--enable-cogl-gles2=@<:@no/yes@:>@],
-                  [Enable libcogl-gles2 frontend api for OpenGL-ES 2.0 @<:@default=auto@:>@])],
-  [],
-  [
-    AS_IF([test "x$HAVE_GLES2" = "x1"],
-          [enable_cogl_gles2=yes],
-          [enable_cogl_gles2=no])
-  ]
-)
-AS_IF([test "x$enable_cogl_gles2" = "xyes"],
-      [
-        AS_IF([test "x$HAVE_GLES2" != "x1"],
-              [
-                AC_MSG_ERROR([libcogl-gles2 is currently only supported on systems with a native GLES 2.0 library])
-              ])
-      ])
-AM_CONDITIONAL([BUILD_COGL_GLES2], [test "x$enable_cogl_gles2" = "xyes"])
-
 
 dnl         ========================================================
 dnl         Check window system integration libraries...
@@ -806,10 +676,6 @@ AC_ARG_ENABLE(
   [xlib-egl-platform],
   [AC_HELP_STRING([--enable-xlib-egl-platform=@<:@no/yes@:>@], [Enable support for the Xlib egl platform @<:@default=auto@:>@])],
   [],
-  AS_IF([test "x$enable_gles1" = "xyes" -o \
-         "x$enable_gles2" = "xyes" && \
-         test $EGL_PLATFORM_COUNT -eq 0],
-        [enable_xlib_egl_platform=yes], [enable_xlib_egl_platform=no])
 )
 AS_IF([test "x$enable_xlib_egl_platform" = "xyes"],
       [
@@ -916,8 +782,6 @@ if test -n "$COGL_PKG_REQUIRES"; then
     for x in $COGL_DEP_GL_LIBS; do
       AS_CASE([$x],
               [-lGL], [],
-              [-lGLESv2], [],
-              [-lGLESv1_CM], [],
               [*], [gl_libs="$gl_libs $x"])
     done
     COGL_DEP_CFLAGS="$COGL_DEP_CFLAGS $COGL_DEP_CFLAGS_GL"
@@ -972,12 +836,6 @@ AC_CHECK_FUNCS([ffs])
 
 dnl 'memmem' is a GNU extension but we have a simple fallback
 AC_CHECK_FUNCS([memmem])
-
-dnl This is used in the cogl-gles2-gears example but it is a GNU extension
-save_libs="$LIBS"
-LIBS="$LIBS $LIBM"
-AC_CHECK_FUNCS([sincos])
-LIBS="$save_libs"
 
 dnl ================================================================
 dnl Platform values
@@ -1088,9 +946,6 @@ cogl-pango/cogl-pango.rc
 cogl-path/Makefile
 cogl-path/cogl-path-1.0.pc
 cogl-path/cogl-path-2.0-experimental.pc
-cogl-gles2/Makefile
-cogl-gles2/cogl-gles2-1.0.pc
-cogl-gles2/cogl-gles2-2.0-experimental.pc
 po/Makefile.in
 )
 
@@ -1114,7 +969,6 @@ echo " • Features:"
 echo "        Drivers: ${enabled_drivers}"
 AS_IF([test "x$GL_LIBRARY_DIRECTLY_LINKED" != xyes],
       [for driver in $enabled_drivers; do
-         driver=`echo $driver | tr "[gles]" "[GLES]"`
          libname=`eval echo \\$COGL_${driver}_LIBNAME`
          echo "        Library name for $driver: $libname"
        done])
@@ -1123,7 +977,6 @@ if test "x$SUPPORT_EGL" = "xyes"; then
 echo "        EGL Platforms:${EGL_PLATFORMS}"
 echo "        Wayland compositor support: ${enable_wayland_egl_server}"
 fi
-echo "        Build libcogl-gles2 GLES 2.0 frontend api: ${enable_cogl_gles2}"
 echo "        Image backend: ${COGL_IMAGE_BACKEND}"
 echo "        Cogl Pango: ${enable_cogl_pango}"
 echo "        Cogl Path: ${enable_cogl_path}"

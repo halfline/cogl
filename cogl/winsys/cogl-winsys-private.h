@@ -33,7 +33,6 @@
 
 #include "cogl-renderer.h"
 #include "cogl-onscreen.h"
-#include "cogl-gles2.h"
 
 #ifdef COGL_HAS_XLIB_SUPPORT
 #include "cogl-texture-pixmap-x11-private.h"
@@ -60,7 +59,6 @@ typedef enum { /*< prefix=COGL_WINSYS_ERROR >*/
   COGL_WINSYS_ERROR_CREATE_CONTEXT,
   COGL_WINSYS_ERROR_CREATE_ONSCREEN,
   COGL_WINSYS_ERROR_MAKE_CURRENT,
-  COGL_WINSYS_ERROR_CREATE_GLES2_CONTEXT,
 } CoglWinsysError;
 
 typedef enum
@@ -104,9 +102,6 @@ typedef struct _CoglWinsysVtable
 
   void
   (*context_deinit) (CoglContext *context);
-
-  void *
-  (*context_create_gles2_context) (CoglContext *ctx, CoglError **error);
 
   CoglBool
   (*onscreen_init) (CoglOnscreen *onscreen, CoglError **error);
@@ -170,14 +165,8 @@ typedef struct _CoglWinsysVtable
   void
   (*save_context) (CoglContext *ctx);
 
-  CoglBool
-  (*set_gles2_context) (CoglGLES2Context *gles2_ctx, CoglError **error);
-
   void
   (*restore_context) (CoglContext *ctx);
-
-  void
-  (*destroy_gles2_context) (CoglGLES2Context *gles2_ctx);
 
   void *
   (*fence_add) (CoglContext *ctx);

@@ -42,10 +42,6 @@
  * functions are available in core, or 255 if it isn't available in
  * any version.
  *
- * @gles_availability: flags to specify which versions of GLES the
- * functions are available in. Should be a combination of
- * COGL_EXT_IN_GLES and COGL_EXT_IN_GLES2.
- *
  * @extension_suffixes: A zero-separated list of suffixes in a
  * string. These are appended to the extension name to get a complete
  * extension name to try. The suffix is also appended to all of the
@@ -59,7 +55,6 @@
 /* This lists functions that are unique to GL 2.0 or GLES 2.0 and are
  * not in the old GLSL extensions */
 COGL_EXT_BEGIN (shaders_glsl_2_only, 2, 0,
-                COGL_EXT_IN_GLES2,
                 "\0",
                 "\0")
 COGL_EXT_FUNCTION (GLuint, glCreateProgram,
@@ -109,7 +104,6 @@ COGL_EXT_END ()
 /* These functions are provided by GL_ARB_shader_objects or are in GL
  * 2.0 core */
 COGL_EXT_BEGIN (shader_objects_or_gl2, 2, 0,
-                COGL_EXT_IN_GLES2,
                 "ARB\0",
                 "shader_objects\0")
 COGL_EXT_FUNCTION (void, glShaderSource,
@@ -235,7 +229,6 @@ COGL_EXT_END ()
 /* These functions are provided by GL_ARB_vertex_shader or are in GL
  * 2.0 core */
 COGL_EXT_BEGIN (vertex_shaders, 2, 0,
-                COGL_EXT_IN_GLES2,
                 "ARB\0",
                 "vertex_shader\0")
 COGL_EXT_FUNCTION (void, glVertexAttribPointer,

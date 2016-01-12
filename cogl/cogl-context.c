@@ -67,15 +67,6 @@
 #include "cogl-pipeline-fragend-arbfp-private.h"
 #endif
 
-/* These aren't defined in the GLES headers */
-#ifndef GL_POINT_SPRITE
-#define GL_POINT_SPRITE 0x8861
-#endif
-
-#ifndef GL_NUM_EXTENSIONS
-#define GL_NUM_EXTENSIONS 0x821D
-#endif
-
 static void _cogl_context_free (CoglContext *context);
 
 COGL_OBJECT_DEFINE (Context, context);
@@ -407,7 +398,7 @@ cogl_context_new (CoglDisplay *display,
   context->texture_download_pipeline = NULL;
   context->blit_texture_pipeline = NULL;
 
-#if defined (HAVE_COGL_GL) || defined (HAVE_COGL_GLES)
+#if defined (HAVE_COGL_GL)
   if (_cogl_has_private_feature (context, COGL_PRIVATE_FEATURE_ALPHA_TEST))
     /* The default for GL_ALPHA_TEST is to always pass which is equivalent to
      * the test being disabled therefore we assume that for all drivers there

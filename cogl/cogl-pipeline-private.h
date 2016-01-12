@@ -65,43 +65,6 @@
 #define COGL_PIPELINE_FRAGEND_GLSL  2
 #define COGL_PIPELINE_N_FRAGENDS    3
 
-#else /* HAVE_COGL_GL */
-
-#ifdef HAVE_COGL_GLES2
-
-#define COGL_PIPELINE_PROGEND_GLSL 0
-#define COGL_PIPELINE_VERTEND_GLSL 0
-#define COGL_PIPELINE_FRAGEND_GLSL 0
-
-#ifdef HAVE_COGL_GLES
-#define COGL_PIPELINE_PROGEND_FIXED 1
-#define COGL_PIPELINE_VERTEND_FIXED 1
-#define COGL_PIPELINE_FRAGEND_FIXED 1
-
-#define COGL_PIPELINE_N_PROGENDS    2
-#define COGL_PIPELINE_N_VERTENDS    2
-#define COGL_PIPELINE_N_FRAGENDS    2
-#else
-#define COGL_PIPELINE_N_PROGENDS    1
-#define COGL_PIPELINE_N_VERTENDS    1
-#define COGL_PIPELINE_N_FRAGENDS    1
-#endif
-
-#else /* HAVE_COGL_GLES2 */
-
-#ifdef HAVE_COGL_GLES
-#define COGL_PIPELINE_PROGEND_FIXED 0
-#define COGL_PIPELINE_VERTEND_FIXED 0
-#define COGL_PIPELINE_FRAGEND_FIXED 0
-#define COGL_PIPELINE_N_PROGENDS    1
-#define COGL_PIPELINE_N_VERTENDS    1
-#define COGL_PIPELINE_N_FRAGENDS    1
-#else
-#error No drivers defined
-#endif
-
-#endif /* HAVE_COGL_GLES2 */
-
 #endif /* HAVE_COGL_GL */
 
 #define COGL_PIPELINE_PROGEND_DEFAULT    0
@@ -283,7 +246,7 @@ typedef enum _CoglPipelineBlendEnable
 typedef struct
 {
   /* Determines how this pipeline is blended with other primitives */
-#if defined(HAVE_COGL_GLES2) || defined(HAVE_COGL_GL)
+#if defined(HAVE_COGL_GL)
   GLenum    blend_equation_rgb;
   GLenum    blend_equation_alpha;
   GLint     blend_src_factor_alpha;

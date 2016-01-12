@@ -42,10 +42,6 @@
  * functions are available in core, or 255 if it isn't available in
  * any version.
  *
- * @gles_availability: flags to specify which versions of GLES the
- * functions are available in. Should be a combination of
- * COGL_EXT_IN_GLES and COGL_EXT_IN_GLES2.
- *
  * @extension_suffixes: A zero-separated list of suffixes in a
  * string. These are appended to the extension name to get a complete
  * extension name to try. The suffix is also appended to all of the
@@ -81,7 +77,6 @@
    GL */
 COGL_EXT_BEGIN (only_in_big_gl,
                 0, 0,
-                0, /* not in GLES */
                 "\0",
                 "\0")
 COGL_EXT_FUNCTION (void, glGetTexLevelParameteriv,
@@ -103,7 +98,6 @@ COGL_EXT_END ()
 /* GLES doesn't support mapping buffers in core so this has to be a
    separate check */
 COGL_EXT_BEGIN (map_vbos, 1, 5,
-                0, /* not in GLES core */
                 "ARB\0OES\0",
                 "vertex_buffer_object\0mapbuffer\0")
 COGL_EXT_FUNCTION (void *, glMapBuffer,
@@ -114,7 +108,6 @@ COGL_EXT_FUNCTION (GLboolean, glUnmapBuffer,
 COGL_EXT_END ()
 
 COGL_EXT_BEGIN (texture_3d, 1, 2,
-                0, /* not in either GLES */
                 "OES\0",
                 "texture_3D\0")
 COGL_EXT_FUNCTION (void, glTexImage3D,
@@ -136,7 +129,6 @@ COGL_EXT_END ()
 
 
 COGL_EXT_BEGIN (offscreen_blit, 3, 0,
-                0, /* not in either GLES */
                 "EXT\0ANGLE\0",
                 "framebuffer_blit\0")
 COGL_EXT_FUNCTION (void, glBlitFramebuffer,
@@ -154,7 +146,6 @@ COGL_EXT_END ()
 
 /* ARB_fragment_program */
 COGL_EXT_BEGIN (arbfp, 255, 255,
-                0, /* not in either GLES */
                 "ARB\0",
                 "fragment_program\0")
 COGL_EXT_FUNCTION (void, glGenPrograms,
@@ -178,7 +169,6 @@ COGL_EXT_FUNCTION (void, glProgramLocalParameter4fv,
 COGL_EXT_END ()
 
 COGL_EXT_BEGIN (EGL_image, 255, 255,
-                0, /* not in either GLES */
                 "OES\0",
                 "EGL_image\0")
 COGL_EXT_FUNCTION (void, glEGLImageTargetTexture2D,
@@ -190,7 +180,6 @@ COGL_EXT_FUNCTION (void, glEGLImageTargetRenderbufferStorage,
 COGL_EXT_END ()
 
 COGL_EXT_BEGIN (framebuffer_discard, 255, 255,
-                0, /* not in either GLES */
                 "EXT\0",
                 "framebuffer_discard\0")
 COGL_EXT_FUNCTION (void, glDiscardFramebuffer,
@@ -200,7 +189,6 @@ COGL_EXT_FUNCTION (void, glDiscardFramebuffer,
 COGL_EXT_END ()
 
 COGL_EXT_BEGIN (IMG_multisampled_render_to_texture, 255, 255,
-                0, /* not in either GLES */
                 "\0",
                 "IMG_multisampled_render_to_texture\0")
 COGL_EXT_FUNCTION (void, glRenderbufferStorageMultisampleIMG,
@@ -219,7 +207,6 @@ COGL_EXT_FUNCTION (void, glFramebufferTexture2DMultisampleIMG,
 COGL_EXT_END ()
 
 COGL_EXT_BEGIN (ARB_sampler_objects, 3, 3,
-                0, /* not in either GLES */
                 "ARB:\0",
                 "sampler_objects\0")
 COGL_EXT_FUNCTION (void, glGenSamplers,
@@ -241,7 +228,6 @@ COGL_EXT_END ()
  * Functions that are common to the extensions and GLSL 2.0 should
  * instead be listed in cogl-glsl-functions.h */
 COGL_EXT_BEGIN (shader_objects, 255, 255,
-                0, /* not in either GLES */
                 "ARB\0",
                 "shader_objects\0")
 COGL_EXT_FUNCTION (GLuint, glCreateProgramObject,
@@ -273,7 +259,6 @@ COGL_EXT_FUNCTION (void, glGetAttachedObjects,
 COGL_EXT_END ()
 
 COGL_EXT_BEGIN (only_gl3, 3, 0,
-                0, /* not in either GLES */
                 "\0",
                 "\0")
 COGL_EXT_FUNCTION (const GLubyte *, glGetStringi,
@@ -281,7 +266,6 @@ COGL_EXT_FUNCTION (const GLubyte *, glGetStringi,
 COGL_EXT_END ()
 
 COGL_EXT_BEGIN (vertex_array_object, 3, 0,
-                0, /* not in either GLES */
                 "ARB\0OES\0",
                 "vertex_array_object\0")
 COGL_EXT_FUNCTION (void, glBindVertexArray,
@@ -295,7 +279,6 @@ COGL_EXT_FUNCTION (void, glGenVertexArrays,
 COGL_EXT_END ()
 
 COGL_EXT_BEGIN (map_region, 3, 0,
-                COGL_EXT_IN_GLES3,
                 "ARB:\0",
                 "map_buffer_range\0")
 COGL_EXT_FUNCTION (GLvoid *, glMapBufferRange,
@@ -307,7 +290,6 @@ COGL_EXT_END ()
 
 #ifdef GL_ARB_sync
 COGL_EXT_BEGIN (sync, 3, 2,
-                0, /* not in either GLES */
                 "ARB:\0",
                 "sync\0")
 COGL_EXT_FUNCTION (GLsync, glFenceSync,
@@ -320,7 +302,6 @@ COGL_EXT_END ()
 #endif
 
 COGL_EXT_BEGIN (draw_buffers, 2, 0,
-                COGL_EXT_IN_GLES3,
                 "ARB\0EXT\0",
                 "draw_buffers\0")
 COGL_EXT_FUNCTION (void, glDrawBuffers,

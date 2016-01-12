@@ -71,10 +71,6 @@ typedef const CoglWinsysVtable *(*CoglWinsysVtableGetter) (void);
 extern const CoglTextureDriver _cogl_texture_driver_gl;
 extern const CoglDriverVtable _cogl_driver_gl;
 #endif
-#if defined (HAVE_COGL_GLES) || defined (HAVE_COGL_GLES2)
-extern const CoglTextureDriver _cogl_texture_driver_gles;
-extern const CoglDriverVtable _cogl_driver_gles;
-#endif
 
 extern const CoglDriverVtable _cogl_driver_nop;
 
@@ -119,34 +115,6 @@ static CoglDriverDescription _cogl_drivers[] =
     &_cogl_driver_gl,
     &_cogl_texture_driver_gl,
     COGL_GL_LIBNAME,
-  },
-#endif
-#ifdef HAVE_COGL_GLES2
-  {
-    COGL_DRIVER_GLES2,
-    "gles2",
-    COGL_RENDERER_CONSTRAINT_SUPPORTS_COGL_GLES2,
-    { COGL_PRIVATE_FEATURE_ANY_GL,
-      COGL_PRIVATE_FEATURE_GL_EMBEDDED,
-      COGL_PRIVATE_FEATURE_GL_PROGRAMMABLE,
-      -1 },
-    &_cogl_driver_gles,
-    &_cogl_texture_driver_gles,
-    COGL_GLES2_LIBNAME,
-  },
-#endif
-#ifdef HAVE_COGL_GLES
-  {
-    COGL_DRIVER_GLES1,
-    "gles1",
-    0,
-    { COGL_PRIVATE_FEATURE_ANY_GL,
-      COGL_PRIVATE_FEATURE_GL_EMBEDDED,
-      COGL_PRIVATE_FEATURE_GL_FIXED,
-      -1 },
-    &_cogl_driver_gles,
-    &_cogl_texture_driver_gles,
-    COGL_GLES1_LIBNAME,
   },
 #endif
   {
@@ -393,10 +361,6 @@ driver_id_to_name (CoglDriver id)
         return "gl";
       case COGL_DRIVER_GL3:
         return "gl3";
-      case COGL_DRIVER_GLES1:
-        return "gles1";
-      case COGL_DRIVER_GLES2:
-        return "gles2";
       case COGL_DRIVER_WEBGL:
         return "webgl";
       case COGL_DRIVER_NOP:
@@ -426,11 +390,6 @@ satisfy_constraints (CoglDriverDescription *description,
   for (l = state->constraints; l; l = l->next)
     {
       CoglRendererConstraint constraint = GPOINTER_TO_UINT (l->data);
-
-      /* Most of the constraints only affect the winsys selection so
-       * we'll filter them out */
-      if (!(constraint & COGL_RENDERER_DRIVER_CONSTRAINTS))
-        continue;
 
       /* If the driver doesn't satisfy any constraint then continue
        * to the next driver description */
@@ -752,7 +711,7 @@ cogl_renderer_get_n_fragment_texture_units (CoglRenderer *renderer)
 
   _COGL_GET_CONTEXT (ctx, 0);
 
-#if defined (HAVE_COGL_GL) || defined (HAVE_COGL_GLES2)
+#if defined (HAVE_COGL_GL)
   if (cogl_has_feature (ctx, COGL_FEATURE_ID_GLSL) ||
       cogl_has_feature (ctx, COGL_FEATURE_ID_ARBFP))
     GE (ctx, glGetIntegerv (GL_MAX_TEXTURE_IMAGE_UNITS, &n));

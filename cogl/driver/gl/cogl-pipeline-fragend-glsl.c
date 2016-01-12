@@ -58,15 +58,6 @@
 
 #include <glib.h>
 
-/*
- * GL/GLES compatability defines for pipeline thingies:
- */
-
-/* This might not be defined on GLES */
-#ifndef GL_TEXTURE_3D
-#define GL_TEXTURE_3D                           0x806F
-#endif
-
 const CoglPipelineFragend _cogl_pipeline_glsl_backend;
 
 typedef struct _UnitState
@@ -927,7 +918,7 @@ _cogl_pipeline_fragend_glsl_add_layer (CoglPipeline *pipeline,
 /* GLES2 and GL3 don't have alpha testing so we need to implement it
    in the shader */
 
-#if defined(HAVE_COGL_GLES2) || defined(HAVE_COGL_GL)
+#if defined(HAVE_COGL_GL)
 
 static void
 add_alpha_test_snippet (CoglPipeline *pipeline,
@@ -1043,7 +1034,7 @@ _cogl_pipeline_fragend_glsl_end (CoglPipeline *pipeline,
         g_string_append (shader_state->source,
                          "  cogl_color_out = cogl_color_in;\n");
 
-#if defined(HAVE_COGL_GLES2) || defined (HAVE_COGL_GL)
+#if defined(HAVE_COGL_GL)
       if (!_cogl_has_private_feature (ctx, COGL_PRIVATE_FEATURE_ALPHA_TEST))
         add_alpha_test_snippet (pipeline, shader_state);
 #endif

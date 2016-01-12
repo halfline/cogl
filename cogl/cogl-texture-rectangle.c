@@ -51,17 +51,6 @@
 #include <string.h>
 #include <math.h>
 
-/* These aren't defined under GLES */
-#ifndef GL_TEXTURE_RECTANGLE_ARB
-#define GL_TEXTURE_RECTANGLE_ARB 0x84F5
-#endif
-#ifndef GL_CLAMP
-#define GL_CLAMP                 0x2900
-#endif
-#ifndef GL_CLAMP_TO_BORDER
-#define GL_CLAMP_TO_BORDER       0x812D
-#endif
-
 static void _cogl_texture_rectangle_free (CoglTextureRectangle *tex_rect);
 
 COGL_TEXTURE_DEFINE (TextureRectangle, texture_rectangle);

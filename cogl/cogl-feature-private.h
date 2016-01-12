@@ -39,13 +39,6 @@
   ((driver_major) > (target_major) || \
    ((driver_major) == (target_major) && (driver_minor) >= (target_minor)))
 
-typedef enum
-{
-  COGL_EXT_IN_GLES = (1 << 0),
-  COGL_EXT_IN_GLES2 = (1 << 1),
-  COGL_EXT_IN_GLES3 = (1 << 2)
-} CoglExtGlesAvailability;
-
 typedef struct _CoglFeatureFunction CoglFeatureFunction;
 
 struct _CoglFeatureFunction
@@ -64,9 +57,6 @@ struct _CoglFeatureData
      without needing an extension. Set to 255,255 if it's only
      provided in an extension */
   int min_gl_major, min_gl_minor;
-  /* Flags specifying which versions of GLES the feature is available
-     in core in */
-  CoglExtGlesAvailability gles_availability;
   /* \0 separated list of namespaces to try. Eg "EXT\0ARB\0" */
   const char *namespaces;
   /* \0 separated list of required extension names without the GL_EXT

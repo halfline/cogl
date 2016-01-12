@@ -69,11 +69,6 @@
 #include <stdlib.h>
 #include <math.h>
 
-/* This isn't defined in the GLES headers */
-#ifndef GL_RED
-#define GL_RED 0x1903
-#endif
-
 COGL_GTYPE_DEFINE_INTERFACE (Texture, texture);
 
 uint32_t

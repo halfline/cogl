@@ -347,7 +347,7 @@ cogl_shader_get_type (CoglHandle  handle)
 CoglBool
 cogl_shader_is_compiled (CoglHandle handle)
 {
-#if defined (HAVE_COGL_GL) || defined (HAVE_COGL_GLES2)
+#if defined (HAVE_COGL_GL)
   if (!cogl_is_shader (handle))
     return FALSE;
 

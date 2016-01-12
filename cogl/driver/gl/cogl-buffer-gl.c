@@ -41,44 +41,6 @@
 #include "cogl-error-private.h"
 #include "cogl-util-gl-private.h"
 
-/*
- * GL/GLES compatibility defines for the buffer API:
- */
-
-#ifndef GL_PIXEL_PACK_BUFFER
-#define GL_PIXEL_PACK_BUFFER 0x88EB
-#endif
-#ifndef GL_PIXEL_UNPACK_BUFFER
-#define GL_PIXEL_UNPACK_BUFFER 0x88EC
-#endif
-#ifndef GL_ARRAY_BUFFER
-#define GL_ARRAY_BUFFER 0x8892
-#endif
-#ifndef GL_ELEMENT_ARRAY_BUFFER
-#define GL_ARRAY_BUFFER 0x8893
-#endif
-#ifndef GL_READ_ONLY
-#define GL_READ_ONLY 0x88B8
-#endif
-#ifndef GL_WRITE_ONLY
-#define GL_WRITE_ONLY 0x88B9
-#endif
-#ifndef GL_READ_WRITE
-#define GL_READ_WRITE 0x88BA
-#endif
-#ifndef GL_MAP_READ_BIT
-#define GL_MAP_READ_BIT 0x0001
-#endif
-#ifndef GL_MAP_WRITE_BIT
-#define GL_MAP_WRITE_BIT 0x0002
-#endif
-#ifndef GL_MAP_INVALIDATE_RANGE_BIT
-#define GL_MAP_INVALIDATE_RANGE_BIT 0x0004
-#endif
-#ifndef GL_MAP_INVALIDATE_BUFFER_BIT
-#define GL_MAP_INVALIDATE_BUFFER_BIT 0x0008
-#endif
-
 void
 _cogl_buffer_gl_create (CoglBuffer *buffer)
 {
@@ -106,9 +68,8 @@ update_hints_to_gl_enum (CoglBuffer *buffer)
 
     case COGL_BUFFER_UPDATE_HINT_STREAM:
       /* OpenGL ES 1.1 only knows about STATIC_DRAW and DYNAMIC_DRAW */
-#if defined(HAVE_COGL_GL) || defined(HAVE_COGL_GLES2)
-      if (buffer->context->driver != COGL_DRIVER_GLES1)
-        return GL_STREAM_DRAW;
+#if defined(HAVE_COGL_GL)
+      return GL_STREAM_DRAW;
 #else
       return GL_DYNAMIC_DRAW;
 #endif

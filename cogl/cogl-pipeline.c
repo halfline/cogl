@@ -209,7 +209,7 @@ _cogl_pipeline_init_default_pipeline (void)
   alpha_state->alpha_func_reference = 0.0;
 
   /* Not the same as the GL default, but seems saner... */
-#if defined(HAVE_COGL_GLES2) || defined(HAVE_COGL_GL)
+#if defined(HAVE_COGL_GL)
   blend_state->blend_equation_rgb = GL_FUNC_ADD;
   blend_state->blend_equation_alpha = GL_FUNC_ADD;
   blend_state->blend_src_factor_alpha = GL_ONE;

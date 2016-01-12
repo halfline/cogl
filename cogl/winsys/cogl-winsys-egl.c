@@ -262,12 +262,7 @@ egl_attributes_from_framebuffer_config (CoglDisplay *display,
   attributes[i++] = EGL_DONT_CARE;
 
   attributes[i++] = EGL_RENDERABLE_TYPE;
-  attributes[i++] = ((renderer->driver == COGL_DRIVER_GL ||
-                      renderer->driver == COGL_DRIVER_GL3) ?
-                     EGL_OPENGL_BIT :
-                     renderer->driver == COGL_DRIVER_GLES1 ?
-                     EGL_OPENGL_ES_BIT :
-                     EGL_OPENGL_ES2_BIT);
+  attributes[i++] = EGL_OPENGL_BIT;
 
   attributes[i++] = EGL_SURFACE_TYPE;
   attributes[i++] = EGL_WINDOW_BIT;
@@ -390,12 +385,6 @@ try_create_context (CoglDisplay *display,
       attribs[6] = EGL_CONTEXT_OPENGL_PROFILE_MASK_KHR;
       attribs[7] = EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT_KHR;
       attribs[8] = EGL_NONE;
-    }
-  else if (display->renderer->driver == COGL_DRIVER_GLES2)
-    {
-      attribs[0] = EGL_CONTEXT_CLIENT_VERSION;
-      attribs[1] = 2;
-      attribs[2] = EGL_NONE;
     }
   else
     attribs[0] = EGL_NONE;
@@ -523,14 +512,6 @@ _cogl_winsys_context_init (CoglContext *context, CoglError **error)
       COGL_FLAGS_SET (context->features, COGL_FEATURE_ID_BUFFER_AGE, TRUE);
     }
 
-  /* NB: We currently only support creating standalone GLES2 contexts
-   * for offscreen rendering and so we need a dummy (non-visible)
-   * surface to be able to bind those contexts */
-  if (egl_display->dummy_surface != EGL_NO_SURFACE &&
-      context->driver == COGL_DRIVER_GLES2)
-    COGL_FLAGS_SET (context->features,
-                    COGL_FEATURE_ID_GLES2_CONTEXT, TRUE);
-
   if (egl_renderer->platform_vtable->context_init &&
       !egl_renderer->platform_vtable->context_init (context, error))
     return FALSE;
@@ -548,54 +529,6 @@ _cogl_winsys_context_deinit (CoglContext *context)
     egl_renderer->platform_vtable->context_deinit (context);
 
   g_free (context->winsys);
-}
-
-typedef struct _CoglGLES2ContextEGL
-{
-  EGLContext egl_context;
-  EGLSurface dummy_surface;
-} CoglGLES2ContextEGL;
-
-static void *
-_cogl_winsys_context_create_gles2_context (CoglContext *ctx, CoglError **error)
-{
-  CoglRendererEGL *egl_renderer = ctx->display->renderer->winsys;
-  CoglDisplayEGL *egl_display = ctx->display->winsys;
-  EGLint attribs[3];
-  EGLContext egl_context;
-
-  attribs[0] = EGL_CONTEXT_CLIENT_VERSION;
-  attribs[1] = 2;
-  attribs[2] = EGL_NONE;
-
-  egl_context = eglCreateContext (egl_renderer->edpy,
-                                  egl_display->egl_config,
-                                  egl_display->egl_context,
-                                  attribs);
-  if (egl_context == EGL_NO_CONTEXT)
-    {
-      _cogl_set_error (error, COGL_WINSYS_ERROR,
-                   COGL_WINSYS_ERROR_CREATE_GLES2_CONTEXT,
-                   "%s", get_error_string ());
-      return NULL;
-    }
-
-  return (void *)egl_context;
-}
-
-static void
-_cogl_winsys_destroy_gles2_context (CoglGLES2Context *gles2_ctx)
-{
-  CoglContext *context = gles2_ctx->context;
-  CoglDisplay *display = context->display;
-  CoglDisplayEGL *egl_display = display->winsys;
-  CoglRenderer *renderer = display->renderer;
-  CoglRendererEGL *egl_renderer = renderer->winsys;
-  EGLContext egl_context = gles2_ctx->winsys;
-
-  _COGL_RETURN_IF_FAIL (egl_display->current_context != egl_context);
-
-  eglDestroyContext (egl_renderer->edpy, egl_context);
 }
 
 static CoglBool
@@ -873,36 +806,6 @@ _cogl_winsys_save_context (CoglContext *ctx)
   egl_context->saved_read_surface = egl_display->current_read_surface;
 }
 
-static CoglBool
-_cogl_winsys_set_gles2_context (CoglGLES2Context *gles2_ctx, CoglError **error)
-{
-  CoglContext *ctx = gles2_ctx->context;
-  CoglDisplayEGL *egl_display = ctx->display->winsys;
-  CoglBool status;
-
-  if (gles2_ctx->write_buffer &&
-      cogl_is_onscreen (gles2_ctx->write_buffer))
-    status =
-      bind_onscreen_with_context (COGL_ONSCREEN (gles2_ctx->write_buffer),
-                                  gles2_ctx->winsys);
-  else
-    status = _cogl_winsys_egl_make_current (ctx->display,
-                                            egl_display->dummy_surface,
-                                            egl_display->dummy_surface,
-                                            gles2_ctx->winsys);
-
-  if (!status)
-    {
-      _cogl_set_error (error,
-                   COGL_WINSYS_ERROR,
-                   COGL_WINSYS_ERROR_MAKE_CURRENT,
-                   "Failed to make gles2 context current");
-      return FALSE;
-    }
-
-  return TRUE;
-}
-
 static void
 _cogl_winsys_restore_context (CoglContext *ctx)
 {
@@ -956,8 +859,7 @@ _cogl_winsys_fence_destroy (CoglContext *context, void *fence)
 
 static CoglWinsysVtable _cogl_winsys_vtable =
   {
-    .constraints = COGL_RENDERER_CONSTRAINT_USES_EGL |
-      COGL_RENDERER_CONSTRAINT_SUPPORTS_COGL_GLES2,
+    .constraints = COGL_RENDERER_CONSTRAINT_USES_EGL,
 
     /* This winsys is only used as a base for the EGL-platform
        winsys's so it does not have an ID or a name */
@@ -969,9 +871,6 @@ static CoglWinsysVtable _cogl_winsys_vtable =
     .display_destroy = _cogl_winsys_display_destroy,
     .context_init = _cogl_winsys_context_init,
     .context_deinit = _cogl_winsys_context_deinit,
-    .context_create_gles2_context =
-      _cogl_winsys_context_create_gles2_context,
-    .destroy_gles2_context = _cogl_winsys_destroy_gles2_context,
     .onscreen_init = _cogl_winsys_onscreen_init,
     .onscreen_deinit = _cogl_winsys_onscreen_deinit,
     .onscreen_bind = _cogl_winsys_onscreen_bind,
@@ -982,9 +881,7 @@ static CoglWinsysVtable _cogl_winsys_vtable =
     .onscreen_update_swap_throttled =
       _cogl_winsys_onscreen_update_swap_throttled,
 
-    /* CoglGLES2Context related methods */
     .save_context = _cogl_winsys_save_context,
-    .set_gles2_context = _cogl_winsys_set_gles2_context,
     .restore_context = _cogl_winsys_restore_context,
 
 #if defined(EGL_KHR_fence_sync) || defined(EGL_KHR_reusable_sync)

@@ -33,8 +33,6 @@ AM_CPPFLAGS += \
 	-DG_LOG_DOMAIN=\"Cogl\" 	\
 	-DCOGL_COMPILATION		\
 	-DCOGL_GL_LIBNAME=\"$(COGL_GL_LIBNAME)\" \
-	-DCOGL_GLES1_LIBNAME=\"$(COGL_GLES1_LIBNAME)\" \
-	-DCOGL_GLES2_LIBNAME=\"$(COGL_GLES2_LIBNAME)\" \
 	-DCOGL_LOCALEDIR=\""$(localedir)"\" \
 	$(NULL)
 
@@ -216,13 +214,6 @@ if COGL_DRIVER_GL_SUPPORTED
 cogl_driver_sources += \
 	driver/gl/gl/cogl-driver-gl.c \
 	driver/gl/gl/cogl-texture-driver-gl.c \
-	$(NULL)
-endif
-
-if COGL_DRIVER_GLES_SUPPORTED
-cogl_driver_sources += \
-	driver/gl/gles/cogl-driver-gles.c \
-	driver/gl/gles/cogl-texture-driver-gles.c	\
 	$(NULL)
 endif
 

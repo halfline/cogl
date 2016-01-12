@@ -53,20 +53,10 @@ _cogl_feature_check (CoglRenderer *renderer,
 {
   const char *suffix = NULL;
   int func_num;
-  CoglExtGlesAvailability gles_availability = 0;
   CoglBool in_core;
 
   switch (driver)
     {
-    case COGL_DRIVER_GLES1:
-      gles_availability = COGL_EXT_IN_GLES;
-      break;
-    case COGL_DRIVER_GLES2:
-      gles_availability = COGL_EXT_IN_GLES2;
-
-      if (COGL_CHECK_GL_VERSION (gl_major, gl_minor, 3, 0))
-        gles_availability |= COGL_EXT_IN_GLES3;
-      break;
     case COGL_DRIVER_ANY:
       g_assert_not_reached ();
     case COGL_DRIVER_WEBGL:
@@ -187,7 +177,6 @@ error:
    for each feature */
 #define COGL_EXT_BEGIN(name,                                            \
                        min_gl_major, min_gl_minor,                      \
-                       gles_availability,                               \
                        namespaces, extension_names)                     \
   static const CoglFeatureFunction cogl_ext_ ## name ## _funcs[] = {
 #define COGL_EXT_FUNCTION(ret, name, args)                          \
@@ -201,9 +190,8 @@ error:
 #undef COGL_EXT_BEGIN
 #define COGL_EXT_BEGIN(name,                                            \
                        min_gl_major, min_gl_minor,                      \
-                       gles_availability,                               \
                        namespaces, extension_names)                     \
-  { min_gl_major, min_gl_minor, gles_availability, namespaces,          \
+  { min_gl_major, min_gl_minor, namespaces,                             \
       extension_names, 0, 0, 0,                                         \
     cogl_ext_ ## name ## _funcs },
 #undef COGL_EXT_FUNCTION

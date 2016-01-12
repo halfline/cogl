@@ -267,10 +267,6 @@ cogl_renderer_connect (CoglRenderer *renderer, CoglError **error);
  * @COGL_RENDERER_CONSTRAINT_USES_XLIB: Require the renderer to be X11
  *                                      based and use Xlib
  * @COGL_RENDERER_CONSTRAINT_USES_EGL: Require the renderer to be EGL based
- * @COGL_RENDERER_CONSTRAINT_SUPPORTS_COGL_GLES2: Require that the
- *    renderer supports creating a #CoglGLES2Context via
- *    cogl_gles2_context_new(). This can be used to integrate GLES 2.0
- *    code into Cogl based applications.
  *
  * These constraint flags are hard-coded features of the different renderer
  * backends. Sometimes a platform may support multiple rendering options which
@@ -292,7 +288,6 @@ typedef enum
   COGL_RENDERER_CONSTRAINT_USES_X11 = (1 << 0),
   COGL_RENDERER_CONSTRAINT_USES_XLIB = (1 << 1),
   COGL_RENDERER_CONSTRAINT_USES_EGL = (1 << 2),
-  COGL_RENDERER_CONSTRAINT_SUPPORTS_COGL_GLES2 = (1 << 3)
 } CoglRendererConstraint;
 
 
@@ -336,8 +331,6 @@ cogl_renderer_remove_constraint (CoglRenderer *renderer,
  * @COGL_DRIVER_NOP: A No-Op driver.
  * @COGL_DRIVER_GL: An OpenGL driver.
  * @COGL_DRIVER_GL3: An OpenGL driver using the core GL 3.1 profile
- * @COGL_DRIVER_GLES1: An OpenGL ES 1.1 driver.
- * @COGL_DRIVER_GLES2: An OpenGL ES 2.0 driver.
  * @COGL_DRIVER_WEBGL: A WebGL driver.
  *
  * Identifiers for underlying hardware drivers that may be used by
@@ -352,8 +345,6 @@ typedef enum
   COGL_DRIVER_NOP,
   COGL_DRIVER_GL,
   COGL_DRIVER_GL3,
-  COGL_DRIVER_GLES1,
-  COGL_DRIVER_GLES2,
   COGL_DRIVER_WEBGL
 } CoglDriver;
 

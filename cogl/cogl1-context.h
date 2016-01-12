@@ -840,7 +840,6 @@ cogl_flush (void);
  * Since: 1.0
  * Deprecated: 1.16: Use the #CoglGLES2Context api instead
  */
-COGL_DEPRECATED_IN_1_16_FOR (CoglGLES2Context_API)
 void
 cogl_begin_gl (void);
 
@@ -853,7 +852,6 @@ cogl_begin_gl (void);
  * Since: 1.0
  * Deprecated: 1.16: Use the #CoglGLES2Context api instead
  */
-COGL_DEPRECATED_IN_1_16_FOR (CoglGLES2Context_API)
 void
 cogl_end_gl (void);
 

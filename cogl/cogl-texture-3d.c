@@ -52,14 +52,6 @@
 #include <string.h>
 #include <math.h>
 
-/* These might not be defined on GLES */
-#ifndef GL_TEXTURE_3D
-#define GL_TEXTURE_3D                           0x806F
-#endif
-#ifndef GL_TEXTURE_WRAP_R
-#define GL_TEXTURE_WRAP_R                       0x8072
-#endif
-
 static void _cogl_texture_3d_free (CoglTexture3D *tex_3d);
 
 COGL_TEXTURE_DEFINE (Texture3D, texture_3d);
@@ -296,16 +288,6 @@ _cogl_texture_3d_can_create (CoglContext *ctx,
 {
   GLenum gl_intformat;
   GLenum gl_type;
-
-  /* This should only happen on GLES */
-  if (!cogl_has_feature (ctx, COGL_FEATURE_ID_TEXTURE_3D))
-    {
-      _cogl_set_error (error,
-                       COGL_SYSTEM_ERROR,
-                       COGL_SYSTEM_ERROR_UNSUPPORTED,
-                       "3D textures are not supported by the GPU");
-      return FALSE;
-    }
 
   /* If NPOT textures aren't supported then the size must be a power
      of two */
@@ -643,7 +625,7 @@ _cogl_texture_3d_pre_paint (CoglTexture *tex, CoglTexturePrePaintFlags flags)
          GL_GENERATE_MIPMAP and reuploading the first pixel */
       if (cogl_has_feature (ctx, COGL_FEATURE_ID_OFFSCREEN))
         _cogl_texture_gl_generate_mipmaps (tex);
-#if defined (HAVE_COGL_GL) || defined (HAVE_COGL_GLES)
+#if defined (HAVE_COGL_GL)
       else if (_cogl_has_private_feature (ctx, COGL_PRIVATE_FEATURE_GL_FIXED))
         {
           _cogl_bind_gl_texture_transient (GL_TEXTURE_3D,
